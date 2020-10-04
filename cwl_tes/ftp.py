@@ -202,11 +202,15 @@ class FtpFsAccess(StdFsAccess):
         ftp = self._connect(fn)
         if ftp:
             host, username, passwd, path = self._parse_url(fn)
+            # Hack around the issue reported in #42. I don't know why, but the
+            # result from listdir returns the FTP hostname concatenated with
+            # the filename, without the intermediary path. This fix just
+            # re-inserts the path...
             if username != "anonymous":
-                template = "ftp://{un}:{pw}@{0}/{1}"
+                template = "ftp://{un}:{pw}@{0}/{2}/{1}"
             else:
-                template = "ftp://{0}/{1}"
-            return [template.format(host, item, un=username, pw=passwd)
+                template = "ftp://{0}/{2}/{1}"
+            return [template.format(host, item, path, un=username, pw=passwd)
                     for item in ftp.nlst(path)]
         return super(FtpFsAccess, self).listdir(fn)
 
